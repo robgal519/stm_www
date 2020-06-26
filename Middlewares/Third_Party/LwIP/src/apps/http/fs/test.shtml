@@ -1,0 +1,65 @@
+
+
+<html>
+<head>
+  <meta charset="utf-8"><!-- utf 8 support-->
+  <title>lwIP - A Lightweight TCP/IP Stack</title>
+  <style>
+    table, th, td {
+      border: 1px solid black;
+    }
+  </style>
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+  google.charts.load('current', {'packages':['corechart']});
+  google.charts.setOnLoadCallback(drawChart);
+
+  function drawChart() {
+    var data = google.visualization.arrayToDataTable([
+      ['Year', 'Sales', 'Expenses'],
+      ['2004',  1000,      400],
+      ['2005',  1170,      460],
+      ['2006',  660,       1120],
+      ['2007',  1030,      540]
+    ]);
+
+    var options = {
+      title: 'Company Performance',
+      curveType: 'function',
+      legend: { position: 'bottom' }
+    };
+
+    var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+    chart.draw(data, options);
+  }
+</script>
+</head>
+<body bgcolor="white" text="black">
+    <table style="width:30%">
+        <tr>
+          <th>sensor</th>
+          <th>value</th>
+          <th>unit</th>
+        </tr>
+        <tr>
+          <td>temperature</td>
+          <td><!--#temp--></td>
+          <td>°C</td>
+        </tr>
+        <tr>
+          <td>pressure</td>
+          <td><!--#pres--></td>
+          <td>hPa</td>
+        </tr>
+        <tr>
+          <td>humidity</td>
+          <td><!--#humid--></td>
+          <td>%</td>
+        </tr>
+      </table>
+
+      <div id="curve_chart" style="width: 900px; height: 500px"></div>
+</body>
+</html>
