@@ -43,7 +43,6 @@ Src/lwip.c \
 Src/ethernetif.c \
 Src/stm32f4xx_it.c \
 Src/stm32f4xx_hal_msp.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_eth.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
@@ -154,9 +153,17 @@ Middlewares/Third_Party/LwIP/src/apps/mqtt/mqtt.c \
 Src/httpserver-netconn.c \
 Src/adc.c \
 Src/temp.c \
+Src/bosh_BME.c \
+Src/bosh_BME280/bme280.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
-Src/stm32f4xx_hal_timebase_tim.c
+Src/stm32f4xx_hal_timebase_tim.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_eth.c \
+Drivers/CMSIS/Driver/I2C_STM32F4xx.c \
+# Drivers/CMSIS/Driver/EMAC_STM32F4xx.c \
+# Drivers/CMSIS/Driver/PHY_LAN8720.c \
+
+
 
 # ASM sources
 ASM_SOURCES =  \
@@ -205,7 +212,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F407xx
+-DSTM32F407xx \
+-DRTE_DEVICE_FRAMEWORK_CLASSIC 
 
 
 # AS includes
@@ -235,7 +243,9 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/LwIP/src/include/compat/posix/sys \
 -IMiddlewares/Third_Party/LwIP/src/include/compat/stdc \
 -IMiddlewares/Third_Party/LwIP/system/arch \
--IDrivers/CMSIS/Include
+-IDrivers/CMSIS/Include \
+-IDrivers/CMSIS/Driver/Include \
+-IDrivers/CMSIS/Driver/Config
 
 
 # compile gcc flags

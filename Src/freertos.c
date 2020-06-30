@@ -28,7 +28,7 @@
 /* USER CODE BEGIN Includes */     
 #include "httpserver-netconn.h"
 #include "lwip.h"
-
+#include "bosh_BME.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,12 +55,20 @@ osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
+  .stack_size = 1024 * 4
 };
+
+
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
+const osThreadAttr_t bme_thread_attributes = {
+  .name = "bme_thread",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 1024 * 4
+};
+void BME_task();
+static volatile application_state state;
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -100,6 +108,7 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  osThreadNew(BME_task, NULL, &bme_thread_attributes);
   /* USER CODE END RTOS_THREADS */
 
 }
@@ -124,21 +133,99 @@ err_t index_html_handler(struct netconn *connection_context) {
                       index_html_len, NETCONN_NOCOPY);
   return ret;
 }
+
+
+
+static void i2C_event(uint32_t event) {
+BME_i2c_event_register(event); 
+}
+void BME_task(){
+  log_message("start BME task\n");
+   extern ARM_DRIVER_I2C Driver_I2C1;
+
+  Driver_I2C1.Initialize(i2C_event);
+  Driver_I2C1.PowerControl(ARM_POWER_FULL);
+  Driver_I2C1.Control(ARM_I2C_BUS_SPEED, ARM_I2C_BUS_SPEED_FAST);
+  Driver_I2C1.Control(ARM_I2C_BUS_CLEAR, 0);
+  init_BME(&Driver_I2C1);
+  log_message("BME initialized\n");
+  const TickType_t xDelay = 500;
+  while(true){
+    BME_set_enable();
+    run_BME(&state);
+    osDelay(xDelay);
+  }
+}
+err_t get_BME_temperature(struct netconn *connection_context) {
+  netconn_write(connection_context, HTTP_OK CONTENT_TYPE_JSON END_OF_HEADER,
+                strlen(HTTP_OK) + strlen(CONTENT_TYPE_JSON) +
+                    strlen(END_OF_HEADER),
+                NETCONN_NOCOPY);
+  static char value[255];
+  uint32_t size_of_val = snprintf(value,255,
+  "{"\
+  "\"temperature\":%d.%02d,"\
+  "\"unit\":\"°C\""\
+  "}"
+  ,(uint32_t)state.temp, ((uint32_t)(state.temp*100))%100);
+  netconn_write(connection_context, value, size_of_val, NETCONN_NOCOPY);
+  return ERR_OK;
+}
+err_t get_BME_pressure(struct netconn *connection_context) {
+  netconn_write(connection_context, HTTP_OK CONTENT_TYPE_JSON END_OF_HEADER,
+                strlen(HTTP_OK) + strlen(CONTENT_TYPE_JSON) +
+                    strlen(END_OF_HEADER),
+                NETCONN_NOCOPY);
+  static char value[255];
+  uint32_t size_of_val = snprintf(value,255,
+  "{"\
+  "\"pressure\":%d.%02d,"\
+  "\"unit\":\"hPa\""\
+  "}"
+  ,(uint32_t)state.pressure, ((uint32_t)(state.pressure*100))%100);
+  netconn_write(connection_context, value, size_of_val, NETCONN_NOCOPY);
+  return ERR_OK;
+}
+err_t get_BME_humidity(struct netconn *connection_context) {
+  netconn_write(connection_context, HTTP_OK CONTENT_TYPE_JSON END_OF_HEADER,
+                strlen(HTTP_OK) + strlen(CONTENT_TYPE_JSON) +
+                    strlen(END_OF_HEADER),
+                NETCONN_NOCOPY);
+  static char value[255];
+  uint32_t size_of_val = snprintf(value,255,
+  "{"\
+  "\"humidity\":%d.%02d,"\
+  "\"unit\":\"%%\""\
+  "}"
+  ,(uint32_t)state.humidity, ((uint32_t)(state.humidity*100))%100);
+  netconn_write(connection_context, value, size_of_val, NETCONN_NOCOPY);
+  return ERR_OK;
+}
+
+/* USER CODE BEGIN Header_StartDefaultTask */
 /**
  * @brief  Function implementing the defaultTask thread.
  * @param  argument: Not used
  * @retval None
  */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
-  /* init code for LWIP */
+void StartDefaultTask(void *argument) {
+  log_message("start default task\n");
+
+  // sys_thread_new("BME280", BME_task, NULL,
+  //                DEFAULT_THREAD_STACKSIZE, osPriorityNormal);
+  // /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
   register_endpoint(GET, "/alive", alive_handler);
   register_endpoint(GET, "/index.html", index_html_handler);
   register_endpoint(GET, "/", index_html_handler);
+  register_endpoint(GET, "/temperature", get_BME_temperature);
+  register_endpoint(GET, "/pressure", get_BME_pressure);
+  register_endpoint(GET, "/humidity", get_BME_humidity);
   http_server_netconn_init();
+  //
+
 
   /* Infinite loop */
   for (;;) {
