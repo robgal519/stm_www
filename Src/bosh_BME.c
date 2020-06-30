@@ -1,8 +1,10 @@
 #include "bosh_BME.h"
+#include "cmsis_os2.h"
 #include "stm32f4xx_hal.h"
 #include <stdint.h>
 #include <string.h>
-
+#include "FreeRTOS.h"
+#include "cmsis_os.h"
 
 #include "Driver_I2C.h"
 
@@ -41,7 +43,10 @@ void init_BME(ARM_DRIVER_I2C *i2c) {
   dev.settings.osr_t = BME280_OVERSAMPLING_2X;
   dev.settings.filter = BME280_FILTER_COEFF_16;
 
-  bme280_init(&dev);
+  int8_t result = bme280_init(&dev);
+  static char msg[40];
+  snprintf(msg,40,"BME280 init result=%d\n",result);
+  log_message(msg);
 }
 
 void run_BME(application_state *state) {
@@ -75,7 +80,7 @@ void BME_set_enable() { BME280_enable = true; }
 
 // implementation of private methods
 
-static void user_delay_ms(uint32_t period) { HAL_Delay(period); }
+static void user_delay_ms(uint32_t period) { osDelay(period); }
 
 static int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data,
                             uint16_t len) {
@@ -140,9 +145,24 @@ static int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr,
   return rslt;
 }
 
-void BME_i2c_event_register(uint32_t event) { communication_event = event; }
+void BME_i2c_event_register(uint32_t event) {communication_event |= event;}
 static void wait_for_transmision() {
-  while ((communication_event & ARM_I2C_EVENT_TRANSFER_DONE) == 0U)
-    ;
-  communication_event = 0;
+  
+  while (true)
+  {
+    if(communication_event & ARM_I2C_EVENT_TRANSFER_DONE){
+      communication_event &= ~ARM_I2C_EVENT_TRANSFER_DONE;
+      break;
+    }
+
+    if(communication_event & ARM_I2C_EVENT_BUS_ERROR){
+      communication_event &= ~ARM_I2C_EVENT_BUS_ERROR;
+      continue;
+    }
+    if(communication_event & ARM_I2C_EVENT_BUS_CLEAR){
+      communication_event &= ~ARM_I2C_EVENT_BUS_CLEAR;
+      continue;
+    }
+  }
+  
 }
