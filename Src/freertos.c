@@ -123,6 +123,27 @@ err_t index_html_handler(struct netconn *connection_context) {
                       index_html_len, NETCONN_NOCOPY);
   return ret;
 }
+#include "bosh_BME.h"
+
+application_state state;
+static void i2C_event(uint32_t event) {
+BME_i2c_event_register(event); 
+}
+void BME_task(){
+   extern ARM_DRIVER_I2C Driver_I2C1;
+
+  Driver_I2C1.Initialize(i2C_event);
+  Driver_I2C1.PowerControl(ARM_POWER_FULL);
+  Driver_I2C1.Control(ARM_I2C_BUS_SPEED, ARM_I2C_BUS_SPEED_FAST);
+  Driver_I2C1.Control(ARM_I2C_BUS_CLEAR, 0);
+  init_BME(&Driver_I2C1);
+
+  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+  while(true){
+    run_BME(&state);
+    osDelayUntil(xDelay);
+  }
+}
 
 /* USER CODE BEGIN Header_StartDefaultTask */
 /**
@@ -133,7 +154,10 @@ err_t index_html_handler(struct netconn *connection_context) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument) {
   log_message("start default task\n");
-  /* init code for LWIP */
+
+  // sys_thread_new("BME280", BME_task, NULL,
+  //                DEFAULT_THREAD_STACKSIZE, osPriorityNormal);
+  // /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN StartDefaultTask */
   register_endpoint(GET, "/alive", alive_handler);
