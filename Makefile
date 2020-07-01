@@ -158,10 +158,10 @@ Src/bosh_BME280/bme280.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
 Src/stm32f4xx_hal_timebase_tim.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_eth.c \
 Drivers/CMSIS/Driver/I2C_STM32F4xx.c \
-# Drivers/CMSIS/Driver/EMAC_STM32F4xx.c \
-# Drivers/CMSIS/Driver/PHY_LAN8720.c \
+Drivers/CMSIS/Driver/EMAC_STM32F4xx.c \
+Drivers/CMSIS/Driver/PHY_LAN8720.c \
+# Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_eth.c \
 
 
 

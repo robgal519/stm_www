@@ -54,7 +54,7 @@
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityIdle,
   .stack_size = 1024 * 4
 };
 
@@ -179,10 +179,10 @@ err_t get_BME_pressure(struct netconn *connection_context) {
   static char value[255];
   uint32_t size_of_val = snprintf(value,255,
   "{"\
-  "\"pressure\":%d.%02d,"\
+  "\"pressure\":%d.%04d,"\
   "\"unit\":\"hPa\""\
   "}"
-  ,(uint32_t)state.pressure, ((uint32_t)(state.pressure*100))%100);
+  ,(uint32_t)state.pressure/100, ((uint32_t)(state.pressure*100))%10000);
   netconn_write(connection_context, value, size_of_val, NETCONN_NOCOPY);
   return ERR_OK;
 }
@@ -229,7 +229,7 @@ void StartDefaultTask(void *argument) {
 
   /* Infinite loop */
   for (;;) {
-    osDelay(0xFFFFFFFF);
+    poll();
   }
   /* USER CODE END StartDefaultTask */
 }
