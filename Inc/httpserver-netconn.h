@@ -5,7 +5,7 @@
 
 /////////// part of the config!
 #ifndef MAX_GET_ENDPOINTS
-#define MAX_GET_ENDPOINTS 6
+#define MAX_GET_ENDPOINTS 7
 #endif
 #ifndef MAX_POST_ENDPOINTS
 #define MAX_POST_ENDPOINTS 0
