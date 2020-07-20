@@ -149,28 +149,56 @@ static err_t handle_request(struct netconn *connection_context, char *request) {
 #if MAX_POST_ENDPOINTS > 0
   const char *post = "POST ";
   if (strncmp(post, request, strlen(post))) {
+    int32_t endpointID =
+        match_endpoint(POST_ENDPOINTS, MAX_POST_ENDPOINTS, request + strlen(POST));
 
+    if (endpointID == ENPOINT_NOT_FOUND) {
+      return page_not_found_handler(connection_context);
+    } else {
+      return POST_HANDLERS[endpointID](connection_context);
+    }
     return ERR_OK;
   }
 #endif
 #if MAX_PUT_ENDPOINTS > 0
   const char *put = "PUT ";
   if (strncmp(put, request, strlen(put))) {
+     int32_t endpointID =
+        match_endpoint(PUT_ENDPOINTS, MAX_PUT_ENDPOINTS, request + strlen(PUT));
 
+    if (endpointID == ENPOINT_NOT_FOUND) {
+      return page_not_found_handler(connection_context);
+    } else {
+      return PUT_HANDLERS[endpointID](connection_context);
+    }
     return ERR_OK;
   }
 #endif
 #if MAX_PATCH_ENDPOINTS > 0
   const char *patch = "PATCH ";
   if (strncmp(patch, request, strlen(patch))) {
+     int32_t endpointID =
+        match_endpoint(PATCH_ENDPOINTS, MAX_PATCH_ENDPOINTS, request + strlen(PATCH));
 
+    if (endpointID == ENPOINT_NOT_FOUND) {
+      return page_not_found_handler(connection_context);
+    } else {
+      return PATCH_HANDLERS[endpointID](connection_context);
+    }
     return ERR_OK;
   }
 #endif
 #if MAX_DELETE_ENDPOINTS > 0
   const char *delete = "DELET ";
   if (strncmp(delete, request, strlen(delete))) {
+    int32_t endpointID =
+        match_endpoint(DELETE_ENDPOINTS, MAX_DELETE_ENDPOINTS, request + strlen(DELETE));
 
+    if (endpointID == ENPOINT_NOT_FOUND) {
+      return page_not_found_handler(connection_context);
+    } else {
+      return DELETE_HANDLERS[endpointID](connection_context);
+    }
     return ERR_OK;
   }
 #endif
@@ -279,53 +307,6 @@ void http_server_serve(struct netconn *conn) {
       log_message("\n");
 
       handle_request(conn, buf);
-
-/* Is this an HTTP GET command? (only check the first 5 chars, since
-there are other formats for GET, and we're keeping it very simple )*/
-#if 0
-      if ((buflen >=5) && (strncmp(buf, "GET /", 5) == 0))
-      {
-    	  if (strncmp((char const *)buf,"GET /index.html",15)==0 || strncmp((char const *)buf,"GET / HTTP",10)==0) {
-          log_message("GET index.html request\n");
-
-           netconn_write(conn, HTTP_OK CONTENT_TYPE_TEXT "\r\n", strlen(HTTP_OK)+strlen(CONTENT_TYPE_TEXT)+2,NETCONN_NOCOPY);
-
-    		  netconn_write(conn, (const unsigned char*)index_html, index_html_len, NETCONN_NOCOPY);
-    	  }
-    	  if (strncmp((char const *)buf,"GET /led1", 9) == 0) {
-          netconn_write(conn, 
-          HTTP_OK 
-          CONTENT_TYPE_JSON 
-          "\n{\"led1\":\"OK\"}", 
-          14+strlen(HTTP_OK) + strlen(CONTENT_TYPE_JSON), 
-          NETCONN_NOCOPY);
-
-          netconn_write(conn, 
-          "\n{\"led2\":\"OK\"}", 
-          14, 
-          NETCONN_NOCOPY);
-    		  //HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-    	  }
-    	  if (strncmp((char const *)buf,"GET /led2", 9) == 0) {
-    		  //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-    	  }
-    	  if (strncmp((char const *)buf,"GET /led3", 9) == 0) {
-    		  //HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-    	  }
-    	  if (strncmp((char const *)buf,"GET /btn1", 9) == 0) {
-    		  // if(HAL_GPIO_ReadPin(User_Blue_Button_GPIO_Port, User_Blue_Button_Pin) == GPIO_PIN_SET)
-    			//   netconn_write(conn, (const unsigned char*)"ON", 2, NETCONN_NOCOPY);
-    		  // else
-    			  netconn_write(conn, (const unsigned char*)"OFF", 3, NETCONN_NOCOPY);
-    	  }
-    	  if (strncmp((char const *)buf,"GET /adc", 8) == 0) {
-    		  sprintf(buf, "HTTP/1.1 200 OK\nContent-Type: text/html;\n\n %d.%2d °C", (int)getMCUTemperature(),(int)(getMCUTemperature()*100)%100);
-          log_message("MCU temperature:\n");
-          log_message(buf);
-    		  netconn_write(conn, (const unsigned char*)buf, strlen(buf), NETCONN_NOCOPY);
-    	  }
-      }
-#endif
     }
   }
   /* Close the connection (server closes in HTTP) */

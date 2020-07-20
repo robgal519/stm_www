@@ -41,11 +41,8 @@ typedef enum {
 } HTTP_Method;
 
 void http_server_netconn_init(void);
-void DynWebPage(struct netconn *conn);
 bool register_endpoint(HTTP_Method method, const char *endpoint_match_string,
                        endpoint_handler handler);
-
-//////// move to handler module
 
 err_t alive_handler(struct netconn *connection_context);
 err_t page_not_found_handler(struct netconn *connection_context);
