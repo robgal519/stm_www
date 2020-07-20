@@ -47,7 +47,9 @@ uint8_t NETMASK_ADDRESS[4];
 uint8_t GATEWAY_ADDRESS[4];
 
 /* USER CODE BEGIN 2 */
-
+void poll(){
+  ethernetif_poll(&gnetif);
+}
 /* USER CODE END 2 */
 
 /**
@@ -82,17 +84,8 @@ void MX_LWIP_Init(void)
 
   /* Registers the default network interface */
   netif_set_default(&gnetif);
+  netif_set_up(&gnetif);
 
-  if (netif_is_link_up(&gnetif))
-  {
-    /* When the netif is fully configured this function must be called */
-    netif_set_up(&gnetif);
-  }
-  else
-  {
-    /* When the netif link is down this function must be called */
-    netif_set_down(&gnetif);
-  }
 
 /* USER CODE BEGIN 3 */
 

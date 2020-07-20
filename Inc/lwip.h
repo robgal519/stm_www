@@ -40,11 +40,11 @@
 #endif /* WITH_RTOS */
 
 /* USER CODE BEGIN 0 */
-
+void poll();
 /* USER CODE END 0 */
 
 /* Global Variables ----------------------------------------------------------*/
-extern ETH_HandleTypeDef heth;
+
 
 /* LWIP init function */	
 void MX_LWIP_Init(void);

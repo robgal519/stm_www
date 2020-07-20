@@ -54,18 +54,19 @@
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 1024 * 4
+  .priority = (osPriority_t) osPriorityIdle,
+  .stack_size = 512
 };
 
 
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+osThreadId_t BMETaskHandle;
 const osThreadAttr_t bme_thread_attributes = {
   .name = "bme_thread",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 1024 * 4
+  .stack_size = 512
 };
 void BME_task();
 static volatile application_state state;
@@ -108,7 +109,7 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  osThreadNew(BME_task, NULL, &bme_thread_attributes);
+  BMETaskHandle = osThreadNew(BME_task, NULL, &bme_thread_attributes);
   /* USER CODE END RTOS_THREADS */
 
 }
@@ -156,6 +157,25 @@ void BME_task(){
     osDelay(xDelay);
   }
 }
+
+err_t check_memeory(struct netconn *connection_context){
+  netconn_write(connection_context, HTTP_OK CONTENT_TYPE_JSON END_OF_HEADER,
+                strlen(HTTP_OK) + strlen(CONTENT_TYPE_JSON) +
+                    strlen(END_OF_HEADER),
+                NETCONN_NOCOPY);
+  static char value[255];
+  uint32_t size_of_val = snprintf(value,255,
+  "{\n"\
+  "\"total_mem\":%d\n"\
+  "\"free_mem\":%d\n"\
+"\"historic_min_free\":%d\n"\
+"\"used_mem\":%d\n"\
+  "}"
+  ,configTOTAL_HEAP_SIZE,xPortGetFreeHeapSize(),xPortGetMinimumEverFreeHeapSize(),configTOTAL_HEAP_SIZE-xPortGetFreeHeapSize());
+  netconn_write(connection_context, value, size_of_val, NETCONN_NOCOPY);
+  return ERR_OK;
+}
+
 err_t get_BME_temperature(struct netconn *connection_context) {
   netconn_write(connection_context, HTTP_OK CONTENT_TYPE_JSON END_OF_HEADER,
                 strlen(HTTP_OK) + strlen(CONTENT_TYPE_JSON) +
@@ -179,10 +199,10 @@ err_t get_BME_pressure(struct netconn *connection_context) {
   static char value[255];
   uint32_t size_of_val = snprintf(value,255,
   "{"\
-  "\"pressure\":%d.%02d,"\
+  "\"pressure\":%d.%04d,"\
   "\"unit\":\"hPa\""\
   "}"
-  ,(uint32_t)state.pressure, ((uint32_t)(state.pressure*100))%100);
+  ,(uint32_t)state.pressure/100, ((uint32_t)(state.pressure*100))%10000);
   netconn_write(connection_context, value, size_of_val, NETCONN_NOCOPY);
   return ERR_OK;
 }
@@ -223,13 +243,14 @@ void StartDefaultTask(void *argument) {
   register_endpoint(GET, "/temperature", get_BME_temperature);
   register_endpoint(GET, "/pressure", get_BME_pressure);
   register_endpoint(GET, "/humidity", get_BME_humidity);
+  register_endpoint(GET, "/memory", check_memeory);
   http_server_netconn_init();
   //
 
 
   /* Infinite loop */
   for (;;) {
-    osDelay(0xFFFFFFFF);
+    poll();
   }
   /* USER CODE END StartDefaultTask */
 }

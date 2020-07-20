@@ -2213,7 +2213,7 @@
 
 // <e> ETH (Ethernet Interface) [Driver_ETH_MAC0]
 // <i> Configuration settings for Driver_ETH_MAC0 in component ::CMSIS Driver:Ethernet MAC
-#define RTE_ETH                         0
+#define RTE_ETH                         1
 
 //   <e> MII (Media Independent Interface)
 #define RTE_ETH_MII                     0

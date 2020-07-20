@@ -5,7 +5,7 @@
 
 /////////// part of the config!
 #ifndef MAX_GET_ENDPOINTS
-#define MAX_GET_ENDPOINTS 6
+#define MAX_GET_ENDPOINTS 7
 #endif
 #ifndef MAX_POST_ENDPOINTS
 #define MAX_POST_ENDPOINTS 0
@@ -41,11 +41,8 @@ typedef enum {
 } HTTP_Method;
 
 void http_server_netconn_init(void);
-void DynWebPage(struct netconn *conn);
 bool register_endpoint(HTTP_Method method, const char *endpoint_match_string,
                        endpoint_handler handler);
-
-//////// move to handler module
 
 err_t alive_handler(struct netconn *connection_context);
 err_t page_not_found_handler(struct netconn *connection_context);
